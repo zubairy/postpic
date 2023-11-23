@@ -2335,3 +2335,54 @@ class Field(NDArrayOperatorsMixin):
     def __setitem__(self, key, other):
         key = self._normalize_slices(key)
         self._matrix[key] = other
+
+
+    '''
+    Functions developed by lgzhang@gmail.com
+
+    '''
+
+    def slice3d(self, axis=None, pos=None):
+        '''
+        Slice 3D field to 2D at axis(x, y, z) = [x0, y0, z0].
+        
+        axis : string
+            'x', 'y', or 'z'. None: Returns all three slices.
+        pos : float array
+            [x0, y0, z0]. Default: Middle of the window.
+
+        '''
+
+        if self.dimensions != 3:
+            raise ValueError(f"Expected 3D, but received {self.dimensions}D field")
+
+        if np.any(pos) is None:
+            pos = np.mean(self.extent.reshape((self.dimensions, 2)), axis=1)
+
+        if np.size(pos) != 3:
+            raise IndexError("Invalid slice positions, use [x0, y0, z0] or None")
+
+        if axis is None:
+            return [self.slice3d(a, pos) for a in ['x', 'y', 'z']]
+
+        axis_map = {'z': 2, 'y': 1, 'x': 0}
+        index = axis_map.get(axis)
+
+        if index not in [0, 1, 2]:
+            raise ValueError("Invalid axis (x, y, or z) value")
+
+        loc = self.axes[index]._find_nearest_index(pos[index])
+
+        if index == 0:
+            label = f'_YOZ ({axis}={self.axes[index][loc]:.5g} m'
+            ret = self[loc, :, :]
+        elif index == 1:
+            label = f'_XOZ ({axis}={self.axes[index][loc]:.5g} m'
+            ret = self[:, loc, :]
+        elif index == 2:
+            label = f'_XOY ({axis}={self.axes[index][loc]:.5g} m'
+            ret = self[:, :, loc]
+
+        ret.name += f'{label}'
+
+        return ret
