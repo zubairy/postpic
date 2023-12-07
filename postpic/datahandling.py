@@ -1647,6 +1647,15 @@ class Field(NDArrayOperatorsMixin):
     var = _reducing_numpy_method("var")
 
     def clip(self, a_min, a_max, out=None):
+        '''
+        from ChatGPT
+
+        a/self: The input array.
+        a_min: The minimum value. Values in the input array smaller than this value will be set to a_min.
+        a_max: The maximum value. Values in the input array larger than this value will be set to a_max.
+        out (optional): If provided, the results will be placed in this array. It must have the same shape as the input array.
+
+        '''
         o = np.clip(self.matrix, a_min, a_max, out=out)
         if out:
             return out
@@ -2439,3 +2448,5 @@ class Field(NDArrayOperatorsMixin):
                                    jacobian_determinant_func=helper.linear2polar_jacdet3d,
                                    **kwargs)
         return ret
+
+
