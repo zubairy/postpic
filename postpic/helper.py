@@ -204,6 +204,19 @@ def linear2polar(x, y):
     return theta, r
 
 
+def linear2polar_jacdet(x, y):
+    '''
+    Added by lgzhang @2023-12-07
+
+    Used as 'jacobian_determinant_func' in 'map_coordinates' method,
+    when transform field from polar back to O-xyz coordinate.
+
+    Was used in 'frompolar()' function in 'datahandling.py' file.
+
+    '''
+    return 1 / np.sqrt(x**2 + y**2)
+
+
 def map_coordinates_parallel(input, coordinates, output=None, order=3, mode='constant', cval=0.0,
                              prefilter=True, chunklen=None, threads=None):
     """

@@ -2264,6 +2264,28 @@ class Field(NDArrayOperatorsMixin):
 
         return ret
 
+
+    def frompolar(self, newaxes, **kwargs):
+        '''
+        Added by lgzhang @2023-12-07
+
+        Transform the Field from polar coordinates back to O-xyz.
+
+        newaxes = [yaxes, zaxes] # in Axis class
+
+        Example usage:
+            Ey2d    = Ey[500, :, :]
+            polarEy = Ey2d.topolar()
+            Ey_back = polarEy.frompolar(Ey2d.axes)
+
+        '''
+        ret = self.map_coordinates(newaxes,
+                                   transform=helper.linear2polar,
+                                   jacobian_determinant_func=helper.linear2polar_jacdet,
+                                   **kwargs)
+        return ret
+
+
     @helper.append_doc_of(io.export_field)
     def export(self, filename, **kwargs):
         '''
@@ -2345,7 +2367,7 @@ class Field(NDArrayOperatorsMixin):
     def slice3d(self, axis=None, pos=None):
         '''
         Slice 3D field to 2D at axis(x, y, z) = [x0, y0, z0].
-        
+
         axis : string
             'x', 'y', or 'z'. None: Returns all three slices.
         pos : float array
@@ -2386,3 +2408,5 @@ class Field(NDArrayOperatorsMixin):
         ret.name += f'{label}'
 
         return ret
+
+
