@@ -2396,13 +2396,13 @@ class Field(NDArrayOperatorsMixin):
         loc = self.axes[index]._find_nearest_index(pos[index])
 
         if index == 0:
-            label = f'_YOZ ({axis}={self.axes[index][loc]:.5g} m'
+            label = f'_YOZ ({axis}={self.axes[index][loc]:.5g} m)'
             ret = self[loc, :, :]
         elif index == 1:
-            label = f'_XOZ ({axis}={self.axes[index][loc]:.5g} m'
+            label = f'_XOZ ({axis}={self.axes[index][loc]:.5g} m)'
             ret = self[:, loc, :]
         elif index == 2:
-            label = f'_XOY ({axis}={self.axes[index][loc]:.5g} m'
+            label = f'_XOY ({axis}={self.axes[index][loc]:.5g} m)'
             ret = self[:, :, loc]
 
         ret.name += f'{label}'
