@@ -2450,3 +2450,20 @@ class Field(NDArrayOperatorsMixin):
         return ret
 
 
+    def filterout3d(self, index, block):
+
+        loc0 = self.axes[index]._find_nearest_index(block[0])
+        loc1 = self.axes[index]._find_nearest_index(block[1])
+
+        ret = self.copy()
+
+        if index==0:
+            ret[loc0:loc1+1, :, :] = 0
+        elif index==1:
+            ret[:, loc0:loc1+1, :] = 0
+        elif index==2:
+            ret[:, :, loc0:loc1+1] = 0
+        else:
+            raise ValueError("Invalid index (0, 1, or 2) value")
+
+        return ret
