@@ -2410,3 +2410,32 @@ class Field(NDArrayOperatorsMixin):
         return ret
 
 
+    def tocylinder(self, newaxes, **kwargs):
+        '''
+        Added by lgzhang @2023-12-07
+
+        Transform 3d field to cylindrical frame.
+
+        Usage:
+            oldaxes = [x, y, z]
+            newaxes = [x, theta, r]
+            support threads by using **kwargs
+        '''
+        ret = self.map_coordinates(newaxes,
+                                   transform=helper.polar2linear3d,
+                                   jacobian_determinant_func=helper.polar2linear_jacdet3d,
+                                   **kwargs)
+        return ret
+
+
+    def fromcylinder(self, newaxes, **kwargs):
+        '''
+        oldaxes = [x, theta, r]
+        newaxes = [x, y, z]
+        support threads
+        '''
+        ret = self.map_coordinates(newaxes,
+                                   transform=helper.linear2polar3d,
+                                   jacobian_determinant_func=helper.linear2polar_jacdet3d,
+                                   **kwargs)
+        return ret

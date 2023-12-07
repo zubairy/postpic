@@ -186,6 +186,13 @@ def polar2linear(theta, r):
     return x, y
 
 
+def polar2linear3d(x, theta, r):
+    x = x
+    y = r*np.cos(theta)
+    z = r*np.sin(theta)
+    return x, y, z
+
+
 def polar2linear_jac(theta, r):
     x_theta = -r*np.sin(theta)
     x_r = np.cos(theta)
@@ -198,10 +205,21 @@ def polar2linear_jacdet(theta, r):
     return r
 
 
+def polar2linear_jacdet3d(x, theta, r):
+    return r
+
+
 def linear2polar(x, y):
     r = np.sqrt(x**2 + y**2)
     theta = np.arctan2(y, x)
     return theta, r
+
+
+def linear2polar3d(x, y, z):
+    x = x
+    r = np.sqrt(y**2 + z**2)
+    theta = np.arctan2(z, y)
+    return x, theta, r
 
 
 def linear2polar_jacdet(x, y):
@@ -215,6 +233,10 @@ def linear2polar_jacdet(x, y):
 
     '''
     return 1 / np.sqrt(x**2 + y**2)
+
+
+def linear2polar_jacdet3d(x, y, z):
+    return 1 / np.sqrt(y**2 + z**2)
 
 
 def map_coordinates_parallel(input, coordinates, output=None, order=3, mode='constant', cval=0.0,
