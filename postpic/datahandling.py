@@ -2404,15 +2404,14 @@ class Field(NDArrayOperatorsMixin):
 
         loc = self.axes[index]._find_nearest_index(pos[index])
 
-        if index == 0:
-            label = f'_YOZ ({axis}={self.axes[index][loc]:.5g} m)'
-            ret = self[loc, :, :]
-        elif index == 1:
-            label = f'_XOZ ({axis}={self.axes[index][loc]:.5g} m)'
-            ret = self[:, loc, :]
-        elif index == 2:
-            label = f'_XOY ({axis}={self.axes[index][loc]:.5g} m)'
-            ret = self[:, :, loc]
+        label = f' ({axis}={self.axes[index][loc]:.5g} m)'
+
+        if np.abs(self.axes[index][loc])<self.spacing[index]:
+            label = f' ({axis}=0 m)'
+
+        if   index == 0: ret = self[loc, :, :]
+        elif index == 1: ret = self[:, loc, :]
+        elif index == 2: ret = self[:, :, loc]
 
         ret.name += f'{label}'
 
