@@ -2449,20 +2449,49 @@ class Field(NDArrayOperatorsMixin):
         return ret
 
 
-    def filterout3d(self, index, block):
+    def filterout(self, index, fPass=None, abs=False):
+        '''
+        Filter out undesired data outside of `fPass` range.
 
-        loc0 = self.axes[index]._find_nearest_index(block[0])
-        loc1 = self.axes[index]._find_nearest_index(block[1])
+        ------
+
+        index: 0, 1 (only valid in 2D), and 2 (only in 3D data)
+
+        fPass: kx belongs to [kx1, kx2] will pass
+            mask = [(kx<kx1) or (kx>kx2)]
+            data[mask] = 0
+
+        abs: if abs=True
+            mask = [abs(kx)<kx1 or abs(kx)>kx2]
+
+        '''
+
+        if index>=self.dimensions:
+            raise ValueError("Invalid index")
+
+        kx = self.axes[index].grid
+        if abs==True: kx = np.abs(kx)
+
+        if fPass==None:
+            fPass = [-np.inf, np.inf]
+
+        mask = np.logical_or(kx<fPass[0], kx>fPass[1])
 
         ret = self.copy()
 
+        # if   index==0: ret[mask, :, :] = 0
+        # elif index==1: ret[:, mask, :] = 0
+        # elif index==2: ret[:, :, mask] = 0
+
+        ## If data.ndim=3, the following codes transform to the above ones
+        #  If data.ndim=2, ret[mask, :] = 0 & ret[:, mask] = 0
+        #  If data.ndim=1, ret[mask] = 0
+
         if index==0:
-            ret[loc0:loc1+1, :, :] = 0
+            ret[(mask,)+(slice(None),)*(self.dimensions-1)] = 0
         elif index==1:
-            ret[:, loc0:loc1+1, :] = 0
+            ret[(Ellipsis,)+(mask,)+(slice(None),)*(self.dimensions-2)] = 0
         elif index==2:
-            ret[:, :, loc0:loc1+1] = 0
-        else:
-            raise ValueError("Invalid index (0, 1, or 2) value")
+            ret[:, :, mask] = 0
 
         return ret
