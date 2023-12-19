@@ -2421,13 +2421,13 @@ class Field(NDArrayOperatorsMixin):
 
         '''
 
-        if index>=self.dimensions:
-            raise ValueError("Invalid index")
+        if index >= self.dimensions:
+            raise ValueError(f"Invalid index (should <={self.dimensions-1})")
 
         kx = self.axes[index].grid
-        if abs==True: kx = np.abs(kx)
+        if abs == True: kx = np.abs(kx)
 
-        if fPass==None:
+        if fPass == None:
             fPass = [-np.inf, np.inf]
 
         mask = np.logical_or(kx<fPass[0], kx>fPass[1])
@@ -2442,11 +2442,11 @@ class Field(NDArrayOperatorsMixin):
         #  If data.ndim=2, ret[mask, :] = 0 & ret[:, mask] = 0
         #  If data.ndim=1, ret[mask] = 0
 
-        if index==0:
+        if index == 0:
             ret[(mask,)+(slice(None),)*(self.dimensions-1)] = 0
-        elif index==1:
-            ret[(Ellipsis,)+(mask,)+(slice(None),)*(self.dimensions-2)] = 0
-        elif index==2:
+        elif index == 1:
+            ret[(slice(None),)+(mask,)+(slice(None),)*(self.dimensions-2)] = 0
+        elif index == 2:
             ret[:, :, mask] = 0
 
         return ret
