@@ -374,7 +374,7 @@ class MatplotlibPlotter(object):
         if self.autosave:
             self.savefig(fig, name)
             plt.close(fig)
-            fig = None
+            # fig = None
         if 'savecsv' in kwargs and kwargs['savecsv']:
             for field in fields:
                 if field.dimensions == 0:
@@ -394,7 +394,7 @@ class MatplotlibPlotter(object):
         if self.autosave:
             self.savefig(fig, name if name else field.name)
             plt.close(fig)
-            fig = None
+            # fig = None
         return fig
 
     def plotField(self, field, autoreduce=True, maxlen=6000, name=None,
@@ -427,7 +427,7 @@ class MatplotlibPlotter(object):
         if self.autosave:
             self.savefig(fig, key)
             plt.close(fig)
-            fig = None
+            # fig = None
         print('Skipped Plot.')
         return fig
 
