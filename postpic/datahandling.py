@@ -2373,51 +2373,6 @@ class Field(NDArrayOperatorsMixin):
 
     '''
 
-    def slice3d(self, axis=None, pos=None):
-        '''
-        Slice 3D field to 2D at axis(x, y, z) = [x0, y0, z0].
-
-        axis : string
-            'x', 'y', or 'z'. None: Returns all three slices.
-        pos : float array
-            [x0, y0, z0]. Default: Middle of the window.
-
-        '''
-
-        if self.dimensions != 3:
-            raise ValueError(f"Expected 3D, but received {self.dimensions}D field")
-
-        if np.any(pos) is None:
-            pos = np.mean(self.extent.reshape((self.dimensions, 2)), axis=1)
-
-        if np.size(pos) != 3:
-            raise IndexError("Invalid slice positions, use [x0, y0, z0] or None")
-
-        if axis is None:
-            return [self.slice3d(a, pos) for a in ['x', 'y', 'z']]
-
-        axis_map = {'z': 2, 'y': 1, 'x': 0}
-        index = axis_map.get(axis)
-
-        if index not in [0, 1, 2]:
-            raise ValueError("Invalid axis (x, y, or z) value")
-
-        loc = self.axes[index]._find_nearest_index(pos[index])
-
-        label = f' ({axis}={self.axes[index][loc]:.5g} m)'
-
-        if np.abs(self.axes[index][loc])<self.spacing[index]:
-            label = f' ({axis}=0 m)'
-
-        if   index == 0: ret = self[loc, :, :]
-        elif index == 1: ret = self[:, loc, :]
-        elif index == 2: ret = self[:, :, loc]
-
-        ret.name += f'{label}'
-
-        return ret
-
-
     def tocylinder(self, newaxes, **kwargs):
         '''
         Added by lgzhang @2023-12-07
@@ -2493,5 +2448,43 @@ class Field(NDArrayOperatorsMixin):
             ret[(Ellipsis,)+(mask,)+(slice(None),)*(self.dimensions-2)] = 0
         elif index==2:
             ret[:, :, mask] = 0
+
+        return ret
+
+
+    def slice3d(self, index=None, pos=None):
+        '''
+        Slice field to lower dimensions [3D to 2D], [2D to 1D], [1D to 0D].
+
+        index : int
+            0, 1 or 2: Return slice along axes[index].
+            None: Returns slices along all axes, pos in middle of the window.
+        pos : float
+            Position corresponding axes[index].
+
+        '''
+
+        if pos is None:
+            pos = np.mean(self.extent.reshape((self.dimensions, 2)), axis=1)
+            return [self.slice3d(a, pos[a]) for a in range(0, self.dimensions)]
+
+        if index is None:
+            index = 0
+            print('Not specify index, use default 0')
+
+        if index >= self.dimensions:
+            raise ValueError(f"Invalid index (should <={self.dimensions-1})")
+
+        loc = self.axes[index]._find_nearest_index(pos)
+
+        label = f' ({self.axes[index].name}={self.axes[index][loc]:.5g} {self.axes[index].unit})'
+        if np.abs(self.axes[index][loc]) < self.spacing[index]:
+            label = f' ({self.axes[index].name}=0 {self.axes[index].unit})'
+
+        if   index == 0: ret = self[(loc,)+(slice(None),)*(self.dimensions-1)]
+        elif index == 1: ret = self[(slice(None),)+(loc,)+(slice(None),)*(self.dimensions-2)]
+        elif index == 2: ret = self[:, :, loc]
+
+        ret.name += f'{label}'
 
         return ret
