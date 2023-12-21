@@ -2458,15 +2458,15 @@ class Field(NDArrayOperatorsMixin):
 
         index : int
             0, 1 or 2: Return slice along axes[index].
-            None: Returns slices along all axes, pos in middle of the window.
-        pos : float
-            Position corresponding axes[index].
+            None: Returns slices along all axes, with pos in middle of the window.
+        pos : [one or more float]
+            Position(s) corresponding axes[index].
 
         '''
 
         if pos is None:
             pos = np.mean(self.extent.reshape((self.dimensions, 2)), axis=1)
-            return [self.slice3d(a, pos[a]) for a in range(0, self.dimensions)]
+            return [self.slice3d(a, [pos[a]]) for a in range(0, self.dimensions)]
 
         if index is None:
             index = 0
@@ -2475,16 +2475,25 @@ class Field(NDArrayOperatorsMixin):
         if index >= self.dimensions:
             raise ValueError(f"Invalid index (should <={self.dimensions-1})")
 
-        loc = self.axes[index]._find_nearest_index(pos)
+        rets = []
 
-        label = f' ({self.axes[index].name}={self.axes[index][loc]:.5g} {self.axes[index].unit})'
-        if np.abs(self.axes[index][loc]) < self.spacing[index]:
-            label = f' ({self.axes[index].name}=0 {self.axes[index].unit})'
+        for a in pos:
 
-        if   index == 0: ret = self[(loc,)+(slice(None),)*(self.dimensions-1)]
-        elif index == 1: ret = self[(slice(None),)+(loc,)+(slice(None),)*(self.dimensions-2)]
-        elif index == 2: ret = self[:, :, loc]
+            loc = self.axes[index]._find_nearest_index(a)
 
-        ret.name += f'{label}'
+            label = f' ({self.axes[index].name}={self.axes[index][loc]:.5g} {self.axes[index].unit})'
+            if np.abs(self.axes[index][loc]) < self.spacing[index]:
+                label = f' ({self.axes[index].name}=0 {self.axes[index].unit})'
 
-        return ret
+            if   index == 0: ret = self[(loc,)+(slice(None),)*(self.dimensions-1)]
+            elif index == 1: ret = self[(slice(None),)+(loc,)+(slice(None),)*(self.dimensions-2)]
+            elif index == 2: ret = self[:, :, loc]
+
+            ret.name += f'{label}'
+
+            rets.append(ret)
+
+        if len(rets) == 1:
+            rets = rets[0]
+
+        return rets
