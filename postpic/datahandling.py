@@ -2368,10 +2368,10 @@ class Field(NDArrayOperatorsMixin):
         self._matrix[key] = other
 
 
-    '''
-    Functions developed by lgzhang@gmail.com
+    """
+    Functions developed by opt.lgzhang@gmail.com
 
-    '''
+    """
 
     def tocylinder(self, newaxes, **kwargs):
         '''
@@ -2466,7 +2466,7 @@ class Field(NDArrayOperatorsMixin):
 
         if pos is None:
             pos = np.mean(self.extent.reshape((self.dimensions, 2)), axis=1)
-            return [self.slice3d(a, [pos[a]]) for a in range(0, self.dimensions)]
+            return [self.slice3d(a, pos[a]) for a in range(0, self.dimensions)]
 
         if index is None:
             index = 0
@@ -2476,6 +2476,11 @@ class Field(NDArrayOperatorsMixin):
             raise ValueError(f"Invalid index (should <={self.dimensions-1})")
 
         rets = []
+
+        try:
+            iter(pos)
+        except:
+            pos = [pos]
 
         for a in pos:
 
