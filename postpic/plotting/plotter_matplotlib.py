@@ -313,7 +313,12 @@ class MatplotlibPlotter(object):
             else:
                 raise ValueError("color images with non-linear axes not supported by this "
                                  "function.")
-            fig.colorbar(im, format='%3.1f')
+            h = fig.colorbar(im, format='%3.1f')
+            colorbar_yticks = h.ax.get_yticks()
+            colorbar_yticklabels = np.zeros_like(colorbar_yticks, dtype=object)  # Use dtype=object to allow strings in the array
+            for i, f in enumerate(colorbar_yticks):  # Correct spelling of 'enumerate'
+                colorbar_yticklabels[i] = r'1E%3.1f' % f
+            h.ax.set_yticklabels(colorbar_yticklabels)
             if clim:
                 im.set_clim(clim)
         else:
