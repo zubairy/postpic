@@ -97,7 +97,7 @@ def setsimreadercls(simreadercls):
                         '"Simulationreader_ifc"')
 
 
-def readDump(dumpidentifier, **kwargs):
+def readDump(dumpidentifier, *args, **kwargs):
     '''
     After using the fucntion :func:`postpic.chooseCode`, this function should
     be the main function for reading a dump into postpic.
@@ -119,7 +119,7 @@ def readDump(dumpidentifier, **kwargs):
     global _dumpreadercls
     if _dumpreadercls is None:
         raise Exception('Specify dumpreaderclass first.')
-    return _dumpreadercls(dumpidentifier, **kwargs)
+    return _dumpreadercls(dumpidentifier, *args, **kwargs)
 
 
 def readSim(simidentifier, **kwargs):
@@ -188,6 +188,10 @@ def chooseCode(code):
         from .vsimhdf5 import Hdf5reader, VSimReader
         setdumpreadercls(Hdf5reader)
         setsimreadercls(VSimReader)
+    elif code.lower() in ['smilei']:
+        from .smileih5 import SmileiReader, SmileiSeries
+        setdumpreadercls(SmileiReader)
+        setsimreadercls(SmileiSeries)
     elif code.lower() in ['dummy']:
         from .dummy import Dummyreader, Dummysim
         setdumpreadercls(Dummyreader)
