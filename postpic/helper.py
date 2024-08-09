@@ -1376,3 +1376,36 @@ def time_profile_at_plane(kspace_or_complex_field, axis='x', value=None, dir=1, 
                                                 dir=dir, t_input=t_input, **kwargs)
     else:
         raise RuntimeError("The chosen algorithm \"{}\" could not be selected.".format(algorithm))
+
+
+""" Added by lgzhang below """
+
+def polar2linear_jacdet3d(x, theta, r):
+    return r
+
+def polar2linear3d(x, theta, r):
+    x = x
+    y = r*np.cos(theta)
+    z = r*np.sin(theta)
+    return x, y, z
+
+def linear2polar3d(x, y, z):
+    x = x
+    r = np.sqrt(y**2 + z**2)
+    theta = np.arctan2(z, y)
+    return x, theta, r
+
+def linear2polar_jacdet(x, y):
+    '''
+    Added by lgzhang @2023-12-07
+
+    Used as 'jacobian_determinant_func' in 'map_coordinates' method,
+    when transform field from polar back to O-xyz coordinate.
+
+    Was used in 'frompolar()' function in 'datahandling.py' file.
+
+    '''
+    return 1 / np.sqrt(x**2 + y**2)
+
+def linear2polar_jacdet3d(x, y, z):
+    return 1 / np.sqrt(y**2 + z**2)
