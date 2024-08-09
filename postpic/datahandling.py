@@ -2343,3 +2343,153 @@ class Field(NDArrayOperatorsMixin):
     def __setitem__(self, key, other):
         key = self._normalize_slices(key)
         self._matrix[key] = other
+
+
+    """ Functions developed by opt.lgzhang@gmail.com """
+
+    def frompolar(self, newaxes, **kwargs):
+        '''
+        Added by lgzhang @2023-12-07
+
+        Transform the Field from polar coordinates back to O-xyz.
+
+        newaxes = [yaxes, zaxes] # in Axis class
+
+        Example usage:
+            Ey2d    = Ey[500, :, :]
+            polarEy = Ey2d.topolar()
+            Ey_back = polarEy.frompolar(Ey2d.axes)
+
+        '''
+        ret = self.map_coordinates(newaxes,
+                                   transform=helper.linear2polar,
+                                   jacobian_determinant_func=helper.linear2polar_jacdet,
+                                   **kwargs)
+        return ret
+
+    def tocylinder(self, newaxes, **kwargs):
+        '''
+        Added by lgzhang @2023-12-07
+
+        Transform 3d field to cylindrical frame.
+
+        Usage:
+            oldaxes = [x, y, z]
+            newaxes = [x, theta, r]
+            support threads by using **kwargs
+        '''
+        ret = self.map_coordinates(newaxes,
+                                   transform=helper.polar2linear3d,
+                                   jacobian_determinant_func=helper.polar2linear_jacdet3d,
+                                   **kwargs)
+        return ret
+
+    def fromcylinder(self, newaxes, **kwargs):
+        '''
+        oldaxes = [x, theta, r]
+        newaxes = [x, y, z]
+        support threads
+        '''
+        ret = self.map_coordinates(newaxes,
+                                   transform=helper.linear2polar3d,
+                                   jacobian_determinant_func=helper.linear2polar_jacdet3d,
+                                   **kwargs)
+        return ret
+
+    def filterout(self, index, fPass=None, abs=False):
+        '''
+        Filter out undesired data outside of `fPass` range.
+
+        ------
+
+        index: 0, 1 (only valid in 2D), and 2 (only in 3D data)
+
+        fPass: kx belongs to [kx1, kx2] will pass
+            mask = [(kx<kx1) or (kx>kx2)]
+            data[mask] = 0
+
+        abs: if abs=True
+            mask = [abs(kx)<kx1 or abs(kx)>kx2]
+
+        '''
+
+        if index >= self.dimensions:
+            raise ValueError(f"Invalid index (should <={self.dimensions-1})")
+
+        kx = self.axes[index].grid
+        if abs == True: kx = np.abs(kx)
+
+        if fPass == None:
+            fPass = [-np.inf, np.inf]
+
+        mask = np.logical_or(kx<fPass[0], kx>fPass[1])
+
+        ret = self.copy()
+
+        # if   index==0: ret[mask, :, :] = 0
+        # elif index==1: ret[:, mask, :] = 0
+        # elif index==2: ret[:, :, mask] = 0
+
+        ## If data.ndim=3, the following codes transform to the above ones
+        #  If data.ndim=2, ret[mask, :] = 0 & ret[:, mask] = 0
+        #  If data.ndim=1, ret[mask] = 0
+
+        if index == 0:
+            ret[(mask,)+(slice(None),)*(self.dimensions-1)] = 0
+        elif index == 1:
+            ret[(slice(None),)+(mask,)+(slice(None),)*(self.dimensions-2)] = 0
+        elif index == 2:
+            ret[:, :, mask] = 0
+
+        return ret
+
+    def slice3d(self, index=None, pos=None):
+        '''
+        Slice field to lower dimensions [3D to 2D], [2D to 1D], [1D to 0D].
+
+        index : int
+            0, 1 or 2: Return slice along axes[index].
+            None: Returns slices along all axes, with pos in middle of the window.
+        pos : [one or more float]
+            Position(s) corresponding axes[index].
+
+        '''
+
+        if pos is None:
+            pos = np.mean(self.extent.reshape((self.dimensions, 2)), axis=1)
+            return [self.slice3d(a, pos[a]) for a in range(0, self.dimensions)]
+
+        if index is None:
+            index = 0
+            print('Not specify index, use default 0')
+
+        if index >= self.dimensions:
+            raise ValueError(f"Invalid index (should <={self.dimensions-1})")
+
+        rets = []
+
+        try:
+            iter(pos)
+        except:
+            pos = [pos]
+
+        for a in pos:
+
+            loc = self.axes[index]._find_nearest_index(a)
+
+            label = f' ({self.axes[index].name}={self.axes[index][loc]:.5g} {self.axes[index].unit})'
+            if np.abs(self.axes[index][loc]) < self.spacing[index]:
+                label = f' ({self.axes[index].name}=0 {self.axes[index].unit})'
+
+            if   index == 0: ret = self[(loc,)+(slice(None),)*(self.dimensions-1)]
+            elif index == 1: ret = self[(slice(None),)+(loc,)+(slice(None),)*(self.dimensions-2)]
+            elif index == 2: ret = self[:, :, loc]
+
+            ret.name += f'{label}'
+
+            rets.append(ret)
+
+        if len(rets) == 1:
+            rets = rets[0]
+
+        return rets
